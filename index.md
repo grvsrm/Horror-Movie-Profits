@@ -1,32 +1,18 @@
----
-title: "Horror Movie Profits"
-author: "Gaurav Sharma"
-date: "29/08/2020"
-output: github_document
-editor_options: 
-  chunk_output_type: console
----
+Horror Movie Profits
+================
+Gaurav Sharma
+29/08/2020
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      cache = TRUE,
-                      warning = FALSE,
-                      message = FALSE,
-                      dpi = 180,
-                      fig.width = 8,
-                      fig.height = 5)
+### lets fetch in the data for today’s data exploration task
 
-library(tidyverse)
-library(scales)
-library(lubridate)
-library(ggrepel)
-library(plotly)
-theme_set(theme_light())
+``` r
+ttfile <- tidytuesdayR::tt_load("2018-10-23")
 ```
 
-### lets fetch in the data for today's data exploration task
-```{r}
-ttfile <- tidytuesdayR::tt_load("2018-10-23")
+    ## 
+    ##  Downloading file 1 of 1: `movie_profit.csv`
+
+``` r
 movie_profit_raw <- ttfile$movie_profit
 
 movie_profit <- movie_profit_raw %>%
@@ -42,22 +28,37 @@ movie_profit <- movie_profit_raw %>%
 ```
 
 ### Lets have a look at the distribution of production budget
-```{r}
+
+``` r
 movie_profit %>% 
     ggplot(aes(production_budget)) +
     geom_histogram() +
     scale_x_log10(labels = dollar_format())
-
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
 ### How many distributirs are there
-```{r}
+
+``` r
 movie_profit %>% 
     count(distributor, sort = T)
 ```
 
+    ## # A tibble: 7 x 2
+    ##   distributor            n
+    ##   <fct>              <int>
+    ## 1 Other               1444
+    ## 2 Warner Bros.         349
+    ## 3 Sony Pictures        326
+    ## 4 Universal            275
+    ## 5 20th Century Fox     269
+    ## 6 Paramount Pictures   251
+    ## 7 Walt Disney          236
+
 ### How do big production houses spend in erms of production buudget. Lets see
-```{r}
+
+``` r
 movie_profit %>%
   mutate(distributor = fct_reorder(distributor, -production_budget)) %>% 
   ggplot(aes(distributor, production_budget)) +
@@ -66,10 +67,11 @@ movie_profit %>%
                color = "gray") +
   scale_y_log10(labels = dollar_format()) +
   coord_flip()
-
 ```
 
-```{r distributor by various categories}
+![](index_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
     pivot_longer(4:6, "category", "value") %>% 
     ggplot(aes(distributor, value)) +
@@ -77,10 +79,11 @@ movie_profit %>%
     scale_y_log10(labels = dollar_format()) +
     coord_flip() +
     facet_wrap(~category, nrow = 3)
-
 ```
 
-```{r genre by production udget}
+![](index_files/figure-gfm/distributor%20by%20various%20categories-1.png)<!-- -->
+
+``` r
 movie_profit %>%
   mutate(genre = fct_reorder(genre, -production_budget)) %>% 
   ggplot(aes(genre, production_budget)) +
@@ -89,10 +92,11 @@ movie_profit %>%
                color = "gray") +
   scale_y_log10(labels = dollar_format()) +
   coord_flip()
-  
 ```
 
-```{r genre by various categories}
+![](index_files/figure-gfm/genre%20by%20production%20udget-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
     pivot_longer(4:6, "category", "value") %>% 
     ggplot(aes(genre, value)) +
@@ -102,8 +106,11 @@ movie_profit %>%
     facet_wrap(~category, nrow = 3)
 ```
 
+![](index_files/figure-gfm/genre%20by%20various%20categories-1.png)<!-- -->
+
 ### What are typical budgets over time (Over years)
-```{r}
+
+``` r
 movie_profit %>% 
   mutate(Year = year(release_date)) %>% 
   ggplot(aes(Year, production_budget, fill = distributor)) +
@@ -112,8 +119,11 @@ movie_profit %>%
   theme(legend.position = "none")
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
 ### What are typical budgets over time (Over decades)
-```{r}
+
+``` r
 movie_profit %>% 
   group_by(Decade) %>% 
   summarise_at(vars(production_budget:worldwide_gross), median, na.rm = T) %>% 
@@ -123,7 +133,9 @@ movie_profit %>%
   scale_y_log10(labels = dollar_format())
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   mutate(profit_ratio = worldwide_gross/production_budget) %>% 
   ggplot(aes(profit_ratio)) +
@@ -131,7 +143,9 @@ movie_profit %>%
   scale_x_log10(labels = scales::ordinal_format())
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   mutate(profit_ratio = worldwide_gross/production_budget,
          genre = fct_reorder(genre, profit_ratio)) %>% 
@@ -139,10 +153,11 @@ movie_profit %>%
   geom_boxplot() +
   scale_y_log10(labels = ordinal_format()) +
   coord_flip()
-
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   group_by(genre) %>% 
   summarise(median_profit_ratio = median(profit_ratio)) %>% 
@@ -152,10 +167,11 @@ movie_profit %>%
   geom_col() +
   coord_flip() +
   scale_y_continuous(labels = function(x) paste0(x,"X"))
-
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   filter(release_date > "2000-01-01") %>% 
   mutate(year = year(release_date)) %>% 
@@ -168,8 +184,12 @@ movie_profit %>%
   scale_y_continuous(labels = function(x) paste0(x, "X"))
 ```
 
-Horror movies started being highly profitable around 2012. What were some of the most profitable horror movies?
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Horror movies started being highly profitable around 2012. What were
+some of the most profitable horror movies?
+
+``` r
 movie_profit %>% 
   filter(release_date > "1990-01-01",
          genre == "Horror",
@@ -184,7 +204,9 @@ movie_profit %>%
        color = "Distributor")
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   filter(genre == "Horror") %>% 
   arrange(desc(profit_ratio)) %>% 
@@ -198,11 +220,13 @@ movie_profit %>%
   labs(title = "Top 10 Earning Horror Movies of all time",
        x = "",
        y = "Ratio of worldwide gross earnings by production budget")
-
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
 ### What are the most common genres over time?
-```{r}
+
+``` r
 movie_profit %>% 
   count(Decade, genre) %>%
   group_by(Decade) %>% 
@@ -210,10 +234,11 @@ movie_profit %>%
   ggplot(aes(Decade, ratio, color = genre)) +
   geom_line(size = 1) +
   scale_y_continuous(labels = percent_format())
-  
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   arrange(desc(profit_ratio)) %>% 
   head(10) %>% 
@@ -229,7 +254,9 @@ movie_profit %>%
        fill = "Genre")
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
 movie_profit %>% 
   ggplot(aes(genre)) +
   geom_bar(aes(fill = genre), alpha = 0.7) +
@@ -238,8 +265,12 @@ movie_profit %>%
   theme(legend.position = "none")
 ```
 
-Lets see profitable movies over the years. Which genres are most profitable?
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+Lets see profitable movies over the years. Which genres are most
+profitable?
+
+``` r
 movie_profit %>% 
   filter(release_date > "1990-01-01",
          profit_ratio > 0.10) %>% 
@@ -255,7 +286,9 @@ movie_profit %>%
   theme(legend.position = "none")
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+``` r
 g <- movie_profit %>% 
   filter(release_date > "1990-01-01",
          profit_ratio > 0.10) %>% 
@@ -272,11 +305,4 @@ g <- movie_profit %>%
 #ggplotly(g)
 ```
 
-
 ### End of Report
-
-
-
-
-
-
