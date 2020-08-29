@@ -32,8 +32,11 @@ movie_profit <- movie_profit_raw %>%
   mutate(release_date = parse_date(release_date, "%m/%d/%Y")) %>%
   filter(release_date < "2018-01-01") %>%
   mutate(distributor = fct_lump(distributor, 6)) %>%
+  mutate(profit_ratio = worldwide_gross/production_budget,
+         Decade = 10 * floor(year(release_date)/10)) %>% 
   drop_na() %>% 
-  filter(domestic_gross > 0)
+  filter(worldwide_gross > 0) %>% 
+  select(release_date, Decade, movie, production_budget:worldwide_gross,profit_ratio, genre, everything())
 ```
 
 ### Lets have a look at the distribution of production budget
@@ -110,7 +113,6 @@ movie_profit %>%
 ### What are typical budgets over time (Over decades)
 ```{r}
 movie_profit %>% 
-  mutate(Decade = 10 * floor(year(release_date)/10)) %>% 
   group_by(Decade) %>% 
   summarise_at(vars(production_budget:worldwide_gross), median, na.rm = T) %>% 
   pivot_longer(-Decade, "metric", "value") %>% 
@@ -140,7 +142,6 @@ movie_profit %>%
 
 ```{r}
 movie_profit %>% 
-  mutate(profit_ratio = worldwide_gross/production_budget) %>% 
   group_by(genre) %>% 
   summarise(median_profit_ratio = median(profit_ratio)) %>% 
   arrange(desc(median_profit_ratio)) %>% 
@@ -153,6 +154,50 @@ movie_profit %>%
 ```
 
 ```{r}
+movie_profit %>% 
+  filter(release_date > "2000-01-01") %>% 
+  mutate(year = year(release_date)) %>% 
+  group_by(genre, year) %>% 
+  summarise(median_profit_ratio = median(profit_ratio),
+            movies = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(year, median_profit_ratio, color = genre)) +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = function(x) paste0(x, "X"))
+```
+
+Horror movies started being highly profitable around 2012
+
+### What are the most common genres over time?
+```{r}
+movie_profit %>% 
+  count(Decade, genre) %>%
+  group_by(Decade) %>% 
+  mutate(ratio = n/sum(n)) %>% 
+  ggplot(aes(Decade, ratio, color = genre)) +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = percent_format())
+  
+```
+
+```{r}
+movie_profit %>% 
+  ggplot(aes(genre)) +
+  geom_bar(aes(fill = genre)) +
+  coord_flip() +
+  facet_wrap(~ distributor, scales = "free_x") +
+  theme(legend.position = "none")
+```
+
+```{r}
 
 ```
+
+
+
+
+
+
+
+
 
